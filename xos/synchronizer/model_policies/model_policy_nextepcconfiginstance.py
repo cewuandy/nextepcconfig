@@ -25,8 +25,8 @@ from multistructlog import create_logger
 log = create_logger(Config().get('logging'))
 
 
-class NextEPCConfigPolicy(Policy):
-    model_name = "NextEPCConfig"
+class NextEPCConfigInstancePolicy(Policy):
+    model_name = "NextEPCConfigInstance"
 
     def handle_create(self, service_instance):
         log.info("handle_create NextEPCConfigPolicy")
@@ -34,8 +34,22 @@ class NextEPCConfigPolicy(Policy):
 
     def handle_update(self, service_instance):
         log.info("handle_update NextEPCConfigPolicy")
-        name = "config-%s" % service_instance.id
-        instance = NextEPCConfigInstance(name=name, owner=service_instance, no_sync=False)
+        owner = KubernetesService.objects.first()
+        input_file = os.path.join(os.path.abspath(os.path.dirname(os.path.realpath(__file__))),
+                                  "nextepc-configmap.yaml")
+        with open(input_file, 'r') as stream:
+            try:
+                resource_definition = json.dumps(yaml.load(stream), sort_keys=True, indent=2)
+                stream.close()
+            except yaml.YAMLError as exc:
+                resource_definition = "{}"
+                print(exc)
+
+        name = "nextepc-config-%s" % service_instance.id
+        instance = KubernetesResourceInstance(name=name, owner=owner,
+                                              resource_definition=resource_definition,
+                                              no_sync=False)
+
         instance.save()
 
     def handle_delete(self, service_instance):
