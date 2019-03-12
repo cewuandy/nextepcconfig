@@ -1,0 +1,10 @@
+option app_label = "nextepcconfig";
+option name = "nextepcconfig";
+
+message NextEPCConfig (Service){
+    option verbose_name = "NextEPCConfig";
+}
+
+message NextEPCConfigInstance (ServiceInstance){
+    option verbose_name = "NextEPCConfigInstance";
+}
